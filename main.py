@@ -1,5 +1,5 @@
 '''
-Author: your name
+Author: Jin Xin
 Date: 2021-09-03 12:57:16
 LastEditTime: 2021-09-22 14:47:02
 LastEditors: Please set LastEditors
@@ -8,6 +8,7 @@ FilePath: \guJiaStockprice\main.py
 '''
 import pandas as pd
 import requests
+from bs4 import BeautifulSoup
 
 #해당 링크는 한국거래소에서 상장법인목록을 엑셀로 다운로드하는 링크입니다.
 #다운로드와 동시에 Pandas에 excel 파일이 load가 되는 구조입니다.
@@ -38,8 +39,23 @@ page = 1
 url = 'http://finance.naver.com/item/sise_day.nhn?code={code}'.format(code=code)
 url = '{url}&page={page}'.format(url=url, page=page)
 print(url)
-header = {'User-Agent':'<복사한 user-agent 값 대체>'}
+header = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36 Edg/94.0.992.31'}
 res = requests.get(url,headers=header)
-df = pd.read_html(res.text, header=0)[0]
-df.head()
+rh = pd.read_html(res.text, header=0)
+df = rh[0]
+
+soup = BeautifulSoup(res.text, 'html.parser')
+table = soup.find('table')
+links = []
+for tr in table.findAll("tr"):
+    trs = tr.findAll("td")
+    for each in trs:
+        try:
+            link = each.find('a')['href']
+            links.append(link)
+        except:
+            pass
+df['Link']=links
+print(df.to_string())
+# df.head()
 
